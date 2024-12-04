@@ -98,6 +98,10 @@ class CarController(CarControllerBase):
     self.v_target_plan = 0
     self.custom_stock_planner_speed = self.param_s.get_bool("CustomStockLongPlanner")
     self.lead_distance = 0
+    # added this
+    self.frame_enabled = 0
+    self.last_frame_enabled = False
+    # to here
 
     self.jerk = 0.0
     self.jerk_l = 0.0
@@ -162,7 +166,15 @@ class CarController(CarControllerBase):
                                                                        self.angle_limit_counter, MAX_ANGLE_FRAMES,
                                                                        MAX_ANGLE_CONSECUTIVE_FRAMES)
 
-    if not CC.latActive:
+    if CC.latActive and not self.last_frame_enabled:
+      self.frame_enabled = self.frame
+      self.last_frame_enabled = True
+    if not CC.latActive and self.last_frame_enabled:
+      self.last_frame_enabled = False
+    allow_steer = False
+    if CC.latActive and (self.frame - self.frame_enabled) > 1:
+      allow_steer = True
+    if not CC.latActive or not allow_steer:
       apply_steer = 0
 
     # Hold torque with induced temporary fault when cutting the actuation bit
